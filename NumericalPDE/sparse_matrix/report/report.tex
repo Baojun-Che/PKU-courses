@@ -1,0 +1,78 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[UTF8]{ctex}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{alltt}
+
+\geometry{a4paper,left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+
+\title{稀疏矩阵的CSR存储格式数值实现报告}
+\author{车保骏 2501110040}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{实验概述}
+本实验实现了稀疏矩阵CSR格式的存储结构，并基于此实现了Jacobi迭代法求解二维Poisson方程.通过不同网格尺寸的数值实验，分析了Jacobi迭代法的收敛性能和计算效率.
+
+\section{代码结构}
+实验代码采用模块化设计，主要文件结构如下：
+
+\begin{alltt}
+sparse_matrix/
+├── .vscode/              # VSCode配置目录
+│   ├── launch.json       # 调试配置
+│   ├── settings.json     # 编辑器设置
+│   └── tasks.json        # 编译任务
+├── include/              # 头文件目录
+│   ├── solvers.hpp       # 求解器声明
+│   └── sparse_matrix.hpp # 稀疏矩阵类声明
+├── src/                  # 源文件目录
+│   ├── solvers.cpp       # 迭代法实现
+│   └── sparse_matrix.cpp # 稀疏矩阵类实现
+└── test/                 # 测试目录
+    └── test.cpp          # 性能测试代码
+\end{alltt}
+
+\subsection{核心模块说明}
+\begin{itemize}
+    \item \textbf{sparse\_matrix.hpp/cpp}: 实现了CSR格式的稀疏矩阵类，支持矩阵向量乘法、三角部分提取等操作
+    \item \textbf{solvers.hpp/cpp}: 实现了Jacobi迭代法和向量范数计算
+    \item \textbf{test.cpp}: 包含Poisson矩阵生成器和性能测试框架
+\end{itemize}
+
+\section{数值结果与分析}
+
+表\ref{tab:results}展示了不同网格尺寸下Jacobi迭代法的性能表现, 其中迭代次数为5000轮.
+
+\begin{table}[H]
+\centering
+\caption{Jacobi迭代法求解Poisson方程性能结果}
+\label{tab:results}
+\begin{tabular}{ccccccc}
+\toprule
+ 矩阵规模 & 非零元个数 & 零元密度(\%) & 构造时间(ms) & 求解时间(ms) & 残差 \\
+\midrule
+ 100×100 & 460 & 95.40 & 0 & 5 & $9.63 \times 10^{-7}$ \\
+ 400×400 & 1920 & 98.80 & 0 & 93 & $9.91 \times 10^{-7}$ \\
+ 900×900 & 4380 & 99.46 & 0 & 488 & $9.95 \times 10^{-7}$ \\
+ 1600×1600 & 7840 & 99.69 & 4 & 1330 & $6.79 \times 10^{-6}$ \\
+ 2500×2500 & 12300 & 99.80 & 2 & 1985 & $1.53 \times 10^{-3}$ \\
+ 3600×3600 & 17760 & 99.86 & 2 & 2814 & $3.27 \times 10^{-2}$ \\
+4900×4900 & 24220 & 99.90 & 3 & 4441 & $2.15 \times 10^{-1}$ \\
+6400×6400 & 31680 & 99.92 & 0 & 4878 & $7.72 \times 10^{-1}$ \\
+ 8100×8100 & 40140 & 99.94 & 3 & 6158 & $1.89 \times 10^{0}$ \\
+ 10000×10000 & 49600 & 99.95 & 4 & 7956 & $3.69 \times 10^{0}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{结论与展望}
+本实验成功实现了基于CSR格式的稀疏矩阵类和Jacobi迭代求解器，并测试了不同规模Poisson方程的求解性能.结果表明：
+CSR格式能有效存储和操作大型稀疏矩阵; Jacobi迭代法对于Poisson方程是可行的，但收敛速度较慢, 未来将实现Gauss-Seidel、SOR等收敛更快的迭代方法.
+\end{document}

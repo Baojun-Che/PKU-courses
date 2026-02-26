@@ -1,0 +1,356 @@
+\documentclass[12pt, a4paper, oneside]{ctexart}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{animate}
+\usepackage{subcaption}
+\usepackage{url}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{multirow}
+\usepackage{listings}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\renewcommand{\algorithmicrequire}{\textbf{输入:}}
+\renewcommand{\algorithmicensure}{\textbf{输出:}}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{caption}
+\usepackage[table,xcdraw]{xcolor}
+
+\usepackage[colorlinks,linkcolor=blue]{hyperref}
+
+% 代码高亮设置
+\lstset{
+    columns=fixed,
+    frame=none,
+    keywordstyle=\color[RGB]{40,40,255},
+    numberstyle=\footnotesize\color{darkgray},
+    commentstyle=\itshape\color[RGB]{0,96,96},
+    stringstyle=\rmfamily\slshape\color[RGB]{128,0,0},
+    showstringspaces=false,
+    tabsize=4
+}
+
+\pagestyle{empty}
+
+% 自定义引用命令
+\newcommand{\figref}[1]{图\ref{#1}}
+\newcommand{\tabref}[1]{表\ref{#1}}
+\newcommand{\equref}[1]{式\ref{#1}}
+\newcommand{\secref}[1]{第\ref{#1}节}
+
+\begin{document}
+
+\title{\textbf{Group LASSO Problem 编程作业报告}}
+\author{车保骏 2501110040}
+\maketitle
+
+\section{问题描述}
+算法需要求解的 Group LASSO 问题为：
+\begin{equation}\label{eq:prob}
+    \min _{x \in \mathbb{R}^{n \times l}} \frac{1}{2}\|A x-b\|_F^2+\mu\|x\|_{1,2}
+\end{equation}
+其中 $A \in \mathbb{R}^{m \times n}$, $b \in \mathbb{R}^{m \times l}$, $\mu>0$, 
+$$
+\|x\|_{1,2}:=\sum_{i=1}^n\|x_{i,:}\|_2,
+$$
+其中 $x_{i,:}$ 是矩阵 $x$ 的第 $i$ 行。
+
+\section{测试数据生成}
+本文使用算法~\ref{al:data_init} 生成测试数据，取 \textbf{numpy.random.seed 随机种子为 97006855}，取 $n = 512$, $m = 256$, $l = 2$, $\mu = 0.01$, $sparse = 0.1$.
+
+\begin{algorithm}[htbp]
+\caption{生成测试数据的伪代码}
+\label{al:data_init}
+\begin{algorithmic}[1]
+\Require 种子 $seed$, 维度 $n$, $m$, $l$, 正则项系数 $\mu$, 稀疏度 $sparse$
+\Ensure 矩阵 $A$, 真实解 $u$, 观测值 $b$, 初始值 $x_0$
+
+\State 设置随机种子: \texttt{np.random.seed(seed)}
+\State 计算非零元素个数: $k \gets \mathrm{round}(n \times sparse)$
+\State 生成随机矩阵: $A \gets \texttt{np.random.randn}(m, n)$
+\State 随机选择支撑集: $p \gets \texttt{np.random.permutation}(n)[:k]$
+\State 初始化零矩阵: $u \gets \texttt{np.zeros}((n, l))$
+\State 在支撑集上赋值: $u[p, :] \gets \texttt{np.random.randn}(k, l)$
+\State 计算观测值: $b \gets A u$
+\State 生成初始值: $x_0 \gets \texttt{np.random.randn}(n, l)$
+\State \Return $A, u, b, x_0$
+\end{algorithmic}
+\end{algorithm}
+
+\section{\textbf{评价指标及结果总览}}
+
+项目完成了多个算法的实现，为了实现不同结果效率之间的对比，本项目将使用以下指标来评价各个算法的性能：
+
+\begin{itemize}
+    \item \textbf{Fval}: 算法得到的最终目标函数值
+    \item \textbf{Errfun}: 算法的解 $x$ 和 cvx-mosek 的解 $x^*$ 的相对距离 $ \dfrac{\Vert x-x^* \Vert _F}{1+\Vert x^* \Vert_F} $
+    \item \textbf{ErrExact}: 算法的解 $x$ 和用于生成数据的 $u$ 的相对距离 $ \dfrac{\Vert x-u\Vert _F}{1+\Vert u\Vert _F} $
+    \item \textbf{Time}：算法运行时间（单位：秒）
+    \item \textbf{Iter}：算法迭代次数\footnote{对于增广拉格朗日法解对偶问题 (ALM-dual)，由于内循环中不更新 $x$，所以迭代次数指外循环的迭代次数。}
+    \item \textbf{Sparsity}：算法得到的最终解的稀疏度，使用
+    \[
+        \text{Sparsity} = \frac{1}{nl}\#\{(i,j): |x_{ij}|>10^{-6}\cdot\max_{k,l}|x_{kl}| \}
+    \]
+    计算，数值越小说明越稀疏。
+\end{itemize}
+
+本文涉及的所有算法在上述评价指标下的表现见表~\ref{table:all}。其中，由于 \textbf{Errfun} 以 cvx-mosek 为参考，所以 cvx-mosek 一行未标出 \textbf{Errfun}；调用 mosek 或 gurobi 求解器的算法均无法获得迭代次数。此外，以 cvx-mosek 的最优值 $f^*$ 为参考，我们还计算了部分算法迭代中相对误差 $\dfrac{f^k-f^*}{f^*}$ 的变化，见图~\ref{fig:all}。
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{l|r r r r r r }
+\hline
+\textbf{Solver} & \textbf{Fval} & \textbf{Errfun} & \textbf{ErrExact} & \textbf{Time(s)} & \textbf{Iter} & \textbf{Sparsity} \\
+\hline
+cvx\_mosek       & 0.67057522 & --        & 3.56e-04    & 1.8220   & --    & 0.1035 \\
+cvx\_gurobi      & 0.67057522 & 7.66e-06  & 3.61e-04    & 2.1429   & --    & 0.1055 \\
+mosek\_direct    & 0.67057522 & 4.33e-07  & 3.56e-04    & 0.4263   & --    & 0.1025 \\
+gurobi\_direct   & 0.67057522 & 1.66e-06  & 3.57e-04    & 0.9032   & --    & 0.1025 \\
+SGD\_primal      & 0.67059517 & 6.93e-04  & 9.66e-04    & 4.7122   & 2357  & 0.2852 \\
+GD\_primal       & 0.67058665 & 3.30e-04  & 6.53e-04    & 2.7558   & 1381  & 0.5156 \\
+ProxGD\_primal   & 0.67057599 & 1.26e-04  & 4.65e-04    & 0.1868   & 643   & 0.1357 \\
+FProxGD\_primal  & 0.67057528 & 3.22e-05  & 3.37e-04    & 0.1202   & 253   & 0.1025 \\
+ALM\_dual        & 0.67058907 & 3.71e-04  & 6.71e-04    & 0.7970   & 9     & 0.0996 \\
+ADMM\_dual       & 0.67058733 & 3.33e-04  & 6.44e-04    & 0.0704   & 70    & 0.0996 \\
+ADMM\_primal     & 0.67060069 & 1.62e-04  & 4.46e-04    & 0.2093   & 569   & 0.6055 \\
+\hline
+\end{tabular}
+\caption{优化算法性能比较}
+\label{table:all}
+\end{table}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\linewidth]{figs/plot_all_solvers.pdf}
+    \caption{不同算法迭代中相对误差 $\dfrac{f^k-f^*}{f^*}$ 的变化}
+    \label{fig:all}
+\end{figure}
+
+\section{调用求解器求解}
+
+\subsection{CVX 调用 Mosek 和 Gurobi 求解器}
+由表~\ref{table:all} 可见，使用 CVX 调用 Mosek 和 Gurobi 求解器的效率相当。两者在最优值上的计算结果几乎相同，在运行时间和解的稀疏度上也很相近。
+
+\subsection{直接调用 Mosek 和 Gurobi 求解}
+为了使原问题能直接被 Mosek 和 Gurobi 求解（不使用 CVXPY），我们引入辅助变量 $t$，构造二阶锥规划。等价的 SOCP-QP 模型为：
+\[
+\begin{aligned}
+\min_{x \in \mathbb{R}^{n l},\, t \in \mathbb{R}^n} \quad & \frac{1}{2} \|A x - b\|_F^2 + \mu \sum_{i=1}^n t_i \\
+\text{s.t.} \quad & \| x_{i,:} \|_2 \leq t_i, \quad i = 1,\dots,n.
+\end{aligned}
+\]
+这就可以直接调用 Mosek 和 Gurobi 求解。表~\ref{table:all} 的结果显示，直接调用两种求解器的求解速度明显快于借助 CVX，且获得的解的稀疏性稍高。相对而言，直接调用 Mosek 比直接调用 Gurobi 求解的速度更快。
+
+\section{其它算法}
+
+\subsection{连续化策略}
+对于 Group Lasso 原始问题 (\ref{eq:prob})，我们采用连续化策略：从一个较大的正则化参数 $\mu_t$ 开始，逐步减小至目标值 $\mu$，并在每个阶段求解对应的 LASSO 问题：
+\begin{equation}\label{eq:prob-mu}
+    \min _{x \in \mathbb{R}^{n \times l}} f_{\mu_t}(x):=\frac{1}{2}\|A x-b\|_F^2+\mu_{t}\|x\|_{1,2}.
+\end{equation}
+该策略的优势在于：在求解当前 $\mu_t$ 对应的问题时，可以将前一阶段（对应 $\mu_{t-1}$）得到的最优解作为高质量的初始点（仅对第一个子问题 $\mu_1$ 使用随机初始点）。由于较大的 $\mu_t$ 会使问题具有更强的正则性，解更稀疏且优化问题更易求解。通过这种方式，连续化策略将原始困难问题转化为一系列由易到难的子问题，利用前序解提供良好初值，从而显著加速整体求解过程。
+
+在本项目中，SGD 算法、GD 算法、ProxGD 算法和 FProxGD 算法使用连续化策略，具体结果见下面的小节。
+
+\subsection{原问题的对偶问题}
+对于 Group Lasso 原始问题 (\ref{eq:prob})，可以考虑通过求解其对偶问题求解原问题。下面做一下对偶问题的推导。首先引入辅助变量 $z = A x - b$，则原问题等价于
+\[
+\min_{x, z} \; \frac{1}{2} \|z\|_F^2 + \mu \|x\|_{1,2} \quad \text{s.t.} \quad z = A x - b.
+\]
+构造拉格朗日函数（对偶变量为 $y \in \mathbb{R}^{m \times l}$）：
+\[
+\mathcal{L}(x, z; y) = \frac{1}{2} \|z\|_F^2 + \mu \|x\|_{1,2} + \langle y, A x - b - z \rangle,
+\]
+并对 $(z,x)$ 求极小：
+\begin{itemize}
+\item 对 $z$ 最小化：  
+  $\min_z \left\{ \frac{1}{2} \|z\|_F^2 - \langle y, z \rangle \right\}$  
+  在 $z = y$ 处取得最小值，代入得 $-\frac{1}{2} \|y\|_F^2$；
+\item 对 $x$ 最小化：  
+  $\min_x \left\{ \mu \|x\|_{1,2} + \langle A^\top y, x \rangle \right\} = 
+  \begin{cases}
+  0, & \text{if } \|(A^\top y)_{i,:}\|_2 \leq \mu,\ \forall i, \\
+  -\infty, & \text{otherwise}.
+  \end{cases}$
+\end{itemize}
+将上述结果代入拉格朗日对偶函数可得
+\[
+g(y) = \inf_{x,z} \mathcal{L}(x,z;y) = 
+\begin{cases}
+-\dfrac{1}{2} \|y\|_F^2 - \langle y, b \rangle, & \text{if } \|(A^\top y)_{i,:}\|_2 \leq \mu,\ \forall i, \\
+-\infty, & \text{otherwise}.
+\end{cases}
+\]
+因此，(\ref{eq:prob}) 的对偶问题为：
+\begin{equation*}
+    \max_{y \in \mathbb{R}^{m \times l}} \; -\frac{1}{2} \|y\|_F^2 - \langle y, b \rangle
+    \quad \text{s.t.} \quad \|(A^\top y)_{i,:}\|_2 \leq \mu, \quad i = 1,\dots,n.
+\end{equation*}
+等价地，可写为最小化形式：
+\begin{equation}\label{eq:dual}
+    \min_{y\in \mathbb{R}^{m \times l}} \; \frac{1}{2} \|y\|_F^2 + \langle y, b \rangle
+    \quad \text{s.t.} \quad \|(A^\top y)_{i,:}\|_2 \leq \mu, \quad i = 1,\dots,n.
+\end{equation}
+
+\subsection{次梯度算法}
+为使用次梯度法（Subgradient Descent）求解，我们把正则项 $\|x\|_{1,2}$ 的次梯度取为：
+\begin{equation}\label{eq:sg}
+    {[\partial\|x\|_{1,2}]_{i,:}} = \begin{cases} 
+\dfrac{x_{i,:}}{\|x_{i,:}\|_2} & \text{if } \|x_{i,:}\|_2 > \epsilon=10^{-6}, \\
+\dfrac{x_{i,:}}{1+\|x_{i,:}\|_2} & \text{otherwise}.
+\end{cases}
+\end{equation}
+
+我们使用连续化策略，采用外层循环调整参数、内层执行次梯度更新的双层循环策略。对于内层循环，我们使用前期固定、后期消失的步长 $\alpha_j = \min(\alpha_{\max}, \frac{\alpha}{j+1})$，并在相邻两次 $f_{\mu_t}$ 差值小于 $tol$ 时停止内循环。每次内循环结束，我们缩小参数 $tol$ 和 $\alpha_{\max}$。经尝试，选取第 $i$ 轮外循环（设最多 $N$ 轮）的 $\mu_t$ 为
+\begin{align}\label{eq:cos}
+    \mu_t &= \text{cos\_annealing}(i,N,\mu,\mu_{\max}) \nonumber\\
+    &:= \mu + \frac{\mu_{\max}-\mu}{2}\left(1+\cos\left(\frac{i}{N}\pi\right)\right).
+\end{align}
+
+算法~\ref{al:SGD} 描述了 SGD 的更新过程。我们取 $\mu_{\max}=2.0$，内循环最大步数 $N_{\text{inner}}$ 为 500（但当 $\mu_t=\mu$ 时允许迭代 5000 步），外循环最大步数 $N_{\text{outer}}$ 为 10，$\alpha_{\max}$ 初值为 0.001，$\alpha=0.5$，$tol$ 初值为 $10^{-3}$。其它细节详见代码。
+
+从图~\ref{fig:all} 和表~\ref{table:all} 中可以看出次梯度法收敛较慢，且最终得到的解稀疏性较差。
+
+\begin{algorithm}[htbp]
+\caption{Group LASSO 随机次梯度下降算法（SGD）}
+\label{al:SGD}
+\begin{algorithmic}[1]
+\Require 初始点 $x_0$, 矩阵 $A$, 观测值 $b$, 正则参数 $\mu$
+\Ensure 最优解 $x_{\text{opt}}$, 迭代次数, 函数值序列
+
+\State 初始化 $x \gets x_0$, $x_{\text{opt}} \gets x_0$, $f_{\text{best}} \gets f(x_0)$, $k \gets 0$
+\For{$\text{out\_iter} = 0$ to $N_{\text{outer}} - 1$}
+    \State $\mu_t \gets \text{cos\_annealing}(out\_iter,N_{\text{outer}},\mu,\mu_{\max}) $
+    \If{$\text{out\_iter} == N_{\text{outer}} - 1$}
+        \State $flag \gets \text{True}$, $tol \gets 10^{-7}$, $N_{\text{inner}} \gets 5000$
+    \Else
+        \State $flag \gets \text{False}$, $N_{\text{inner}} \gets 500$
+    \EndIf
+    \For{$j = 0$ to $N_{\text{inner}} - 1$}
+        \State 计算当前目标值 $f^k \gets f(x)$
+        \If{$f^k < f_{\text{best}}$}
+            \State $x_{\text{opt}} \gets x$, $f_{\text{best}} \gets f^k$
+        \EndIf
+        \If{$j \geq 1$ \textbf{and} $|f_{\mu_t}(x) - f_{\mu_t}(x_{\text{prev}})| < tol$}
+            \State \textbf{break}
+        \EndIf
+        \State $x_{\text{prev}} \gets x$
+        \State 计算次梯度 $g_k \gets A^\top (A x - b) + \mu_t \cdot \partial \|x\|_{1,2}$ \Comment{见式~\eqref{eq:sg}}
+        \State 计算步长 $\alpha_j \gets \min(\alpha_{\max}, \dfrac{\alpha}{j + 1})$
+        \State 更新 $x \gets x - \alpha_j g_k$
+        \State $k \gets k + 1$
+        \If{$k \geq 5000$}
+            \State $flag \gets \text{True}$
+            \State \textbf{break}
+        \EndIf
+    \EndFor
+    \If{$flag$}
+        \State \textbf{break}
+    \EndIf
+    \State 更新参数: $tol \gets \max(tol \cdot 0.8, 10^{-6})$, $\alpha_{\max} \gets \alpha_{\max} \cdot 0.9$
+\EndFor
+\State \Return $x_{\text{opt}}$, $k$, 函数值序列$\{f^k\}$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{光滑化梯度法}
+我们考虑对正则项 $\|x\|_{1,2}$ 做光滑化后，取梯度为：
+\begin{equation}\label{eq:smooth-g}
+    [\nabla g(x,\varepsilon)]_{i,:} = \begin{cases} 
+\dfrac{x_{i,:}}{\|x_{i,:}\|_2} & \text{if } \|x_{i,:}\|_2 > \epsilon, \\
+\dfrac{x_{i,:}}{\epsilon} & \text{otherwise}.
+\end{cases}
+\end{equation}
+光滑化梯度法的迭代过程类似于次梯度法，但在部分细节上有区别：
+\begin{itemize}
+    \item $tol$ 和 $\mu_t$ 每次内循环开始时缩小到原来的 0.1，其中 $\mu_t$ 控制为不小于 $\mu$。$\mu_t$ 的初值选为 200。
+    \item 采用式~\ref{eq:smooth-g} 的光滑化梯度替代次梯度，其中 $\epsilon = \epsilon_t = 10^{-3}\mu_t$。此时子问题的梯度 Lipschitz 常数可选为 $L_t = \|A\|_2^2 + \frac{\mu_t}{\epsilon_t} = \|A\|_2^2 + 10^3$。因此所有内循环均固定步长为 $\frac{1}{L_t}$。
+    \item 超参数变化：设置所有内循环总数上限为 5000，每次内循环不超过 500 次。设置 $tol$ 初值为 0.01。
+\end{itemize}
+
+从表~\ref{table:all} 中可以看出光滑化梯度法尽管收敛比次梯度法快，但最终得到的解稀疏性更差，这可能是光滑化处理所导致的。
+
+\subsection{近端点梯度算法及其 Nesterov 加速}
+在本项目求解的问题形式下，近似点算子可以逐行计算，解析地写出。记 $h(x)=\mu \|x\|_{1,2}$，则
+\begin{equation}\label{eq:prox}
+    [\operatorname{prox}_{t h}(z)]_{i,:} = \begin{cases}
+\left(1 - \dfrac{t\mu}{\|z_{i,:}\|_2} \right) z_{i,:}, & \text{if } \|z_{i,:}\|_2 > t\mu, \\
+0, & \text{otherwise}.
+\end{cases}
+\end{equation}
+对于近端点梯度算法（ProxGD）我们仍然采用连续化策略：
+\begin{itemize}
+    \item 每次内循环做更新：$z^{k+1} = x^k - t A^\top(Ax^k - b)$, $x^{k+1} = \operatorname{prox}_{t h}(z^{k+1})$，其中固定步长 $t = \frac{1}{\|A\|_2^2}$。
+    \item $tol$ 和 $\mu_t$ 每次内循环开始时缩小到原来的 0.1，其中 $\mu_t$ 控制为不小于 $\mu$。$\mu_t$ 的初值选为 200。
+    \item 超参数：设置所有内循环总数上限为 5000，每次内循环不超过 500 次。设置 $tol$ 初值为 0.01。
+\end{itemize}
+
+Nesterov 加速是一种常基于动量的加速方法。这里我们选取著名的 FISTA 加速算法做更新，得到 FProxGD 的迭代格式：
+\begin{align*}
+    y^k &= x^{k-1} + \frac{k-2}{k+1}(x^{k-1} - x^{k-2}),\\
+    x^k &= \operatorname{prox}_{t h}(y^k - t A^\top(A y^k - b)),
+\end{align*}
+其中固定步长 $t$ 仍取 $\frac{1}{\|A\|_2^2}$。
+
+从图~\ref{fig:all} 和表~\ref{table:all} 中可以看出，ProxGD 和 FProxGD 的各方面性能均优于 SGD 和 GD。两者相比，加速后的 FProxGD 算法在各方面性能均优于 ProxGD。
+
+\subsection{增广拉格朗日法和 ADMM 求解对偶问题}
+对于原问题的对偶问题~\ref{eq:dual}，我们引入变量 $z = A^\top y$，将对偶问题化为：
+\begin{align}\label{eq:dual2}
+    \min_{y\in \mathbb{R}^{m \times l}}& \quad \frac{1}{2} \|y\|_F^2 + \langle y, b \rangle \\
+    \text{s.t.}& \quad A^\top y + z = 0, \quad \|z_{i,:}\|_2 \leq \mu, \quad i = 1,\dots,n.
+\end{align}
+我们对约束 $A^\top y + z = 0$ 引入乘子 $\lambda$，定义增广拉格朗日函数
+\begin{equation}\label{eq:Lag}
+    \mathcal{L}_{\rho}(y,z,\lambda) =  \frac{1}{2} \|y\|_F^2 + \langle y, b \rangle + \langle\lambda, A^\top y + z\rangle + \frac{\rho}{2}\|A^\top y + z\|_F^2.
+\end{equation}
+我们固定 $\mu$（即不再采用连续化策略），对于每个子问题，以上一个子问题的 $(y,z)$ 为初值求解
+\[
+(y,z) = \arg\min_{\|z_{i,:}\|_2 \leq \mu}  \mathcal{L}_{\rho_k}(y,z,\lambda^k).
+\]
+求解方式为固定 $z$，优化 $y$，此时有解析解：
+\begin{equation}\label{eq:y-update}
+    y = (I + \rho_k A A^\top)^{-1} ( - A \lambda^k + \rho_k A (-z) - b ).
+\end{equation}
+再将 $y$ 固定，优化 $z$，此时即为做投影：
+\begin{equation}\label{eq:z-update}
+    z = \operatorname{proj}_{\{\|z_{i,:}\|_2 \leq \mu\}} \left( -\frac{1}{\rho_k}\lambda^k - A^\top y \right).
+\end{equation}
+ALM 算法交替进行~\ref{eq:y-update} 式和~\ref{eq:z-update} 式，直到 $z$ 的变化值小于 $tol_{\text{inner}}$。接着做乘子更新：
+\begin{equation}\label{eq:lambda-update}
+    \lambda^{k+1} = \lambda^k + \rho_k (A^\top y + z).
+\end{equation}
+我们选取初值 $tol_{\text{inner}} = 10^{-6}$, $\rho_1 = 10$，并在每次外循环结束后增大 $\rho_{k+1} = 2\rho_k$，将 $tol_{\text{inner}}$ 减半。内外循环上限分别为 200 轮、20 轮，相邻两次外循环的目标函数值差小于 $10^{-7}$ 则停止循环。
+
+与 ALM 类似，ADMM 求解对偶问题也使用增广拉格朗日函数，区别在于不区分内外循环，而是交替进行~\ref{eq:y-update}、~\ref{eq:z-update} 和~\ref{eq:lambda-update} 的更新。此时，$\rho$ 固定为 100，终止条件设最近 20 轮内目标函数值最大值和最小值差小于 $10^{-6}$ 或运行 1000 轮则停止循环。
+
+事实上，上述增广拉格朗日方程~\ref{eq:Lag} 中的乘子 $\lambda$ 就对应原始变量 $x$。因此我们可以根据 $\lambda$ 的更新作为 $x$ 的更新。从表~\ref{table:all} 中可以看出，ADMM-dual 的求解效率相当高，且求得的解具有很好的稀疏性。
+
+\subsection{ADMM 求解原始问题}
+类似地，我们可以写出原始问题求解的 ADMM 算法：
+\begin{align*}
+    x^{k+1} &= (\rho I + A^\top A)^{-1}(A^\top b + \rho z^k - y^k), \\
+    z^{k+1} &= \operatorname{proj}_{\{\|z_{i,:}\|_2 \leq \mu/\rho\}} \left( x^{k+1} + \frac{1}{\rho} y^k \right), \\
+    y^{k+1} &= y^k + \rho (x^{k+1} - z^{k+1}).
+\end{align*}
+此时，$\rho$ 固定为 0.5，终止条件设最近 20 轮内目标函数值最大值和最小值差小于 $10^{-6}$ 或运行 3000 轮则停止循环。然而，从表~\ref{table:all} 和图~\ref{fig:all} 中可以看出，ADMM-primal 的求解效率和精度都不如 ADMM-dual。
+
+\section{总结与说明}
+
+\textbf{声明：} 本项目的代码和本报告的书写有借助 Deepseek、Qwen3-max 两个 AI 工具，具体使用场景包括询问其商用求解器调用方法、优化代码结构、搭建本实验报告的基础 LaTeX 框架等。如上述算法描述有细节缺失，请参考提交代码。
+
+本文围绕 Group Lasso 优化问题，系统实现了包括商业求解器调用、一阶优化算法（次梯度法、光滑化梯度法、近端梯度法及其 Nesterov 加速版本）、对偶方法（增广拉格朗日法 ALM 和 ADMM）以及原始问题的 ADMM 算法在内的多种求解策略，并在统一的测试样例下进行了全面性能评估。
+
+实验结果表明：
+\begin{itemize}
+\item 商业求解器 MOSEK、Gurobi 在精度上具有显著优势，尤其在直接建模为二阶锥规划时效率远高于通过 CVXPY 接口调用，说明了问题结构利用的重要性。
+\item 次梯度法与光滑化梯度法格式简单，但即使精心选取参数和连续化策略仍收敛缓慢，获得的解稀疏性较差，说明这两种方法对于 Group Lasso 优化问题适用性差。
+\item ProxGD 及其加速版本 FProxGD 表现出极优的综合性能：收敛速度快、解的质量高、稀疏性良好。
+\item 对偶方法（ALM-dual 与 ADMM-dual）展现出极高的计算效率和良好的稀疏恢复能力。特别是 ADMM-dual 仅需 70 次迭代、0.08 秒即可获得接近最优的解，说明将复杂非光滑项移至约束侧后，投影操作变得简洁高效。
+\item 相比之下，ADMM-primal 在实际运行中收敛较慢、稀疏性控制不佳（Sparsity 高达 0.6055）。
+\end{itemize}
+
+综上所述，对于中等规模的 Group Lasso 问题，若追求高精度解，应当使用直接调用 MOSEK 的 SOCP 方式；若注重算法实现灵活性，FProxGD 或者 ADMM-dual 是较为高效的算法方案。
+
+\end{document}

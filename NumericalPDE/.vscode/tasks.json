@@ -1,0 +1,39 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-heat-equation",
+      "type": "shell",
+      "command": "g++",
+      "args": [
+        "-g",
+        "-ID:/Course Programs/NumericalPDE/sparse_matrix/include",
+        "-ID:/Course Programs/NumericalPDE/2D_Domain",
+        "D:/Course Programs/NumericalPDE/Possion_equation_2D/Heat_Equation.cpp",
+        "D:/Course Programs/NumericalPDE/sparse_matrix/src/solvers.cpp",
+        "D:/Course Programs/NumericalPDE/sparse_matrix/src/sparse_matrix.cpp",
+        "D:/Course Programs/NumericalPDE/2D_Domain/test_functions.cpp",
+        "-o",
+        "D:/Course Programs/NumericalPDE/Possion_equation_2D/Heat_Equation.exe",
+        "-ggdb3",
+        "-Wall",
+        "-static-libgcc",
+        "-std=c++17",
+        "-finput-charset=UTF-8",
+        "-fexec-charset=GB18030",
+        "-D_USE_MATH_DEFINES"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared"
+      },
+      "problemMatcher": ["$gcc"]
+    }
+  ]
+}

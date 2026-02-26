@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Heat Equation",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "D:/Course Programs/NumericalPDE/Possion_equation_2D/Heat_Equation.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "D:/Course Programs/NumericalPDE",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "miDebuggerPath": "D:/MinGW/bin/gdb.exe",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ],
+      "preLaunchTask": "build-heat-equation"   // ← 关键！必须匹配 tasks.json 的 label
+    }
+  ]
+}

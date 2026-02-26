@@ -1,0 +1,32 @@
+{
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "C/C++: g++.exe 生成活动文件",
+            "command": "D:\\MinGW\\bin\\g++.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "-I\\D:\\Course Programs\\NumericalPDE\\sparse_matrix\\include",
+                "D:/Course Programs/NumericalPDE/sparse_matrix/src/solvers.cpp",
+                "D:/Course Programs/NumericalPDE/sparse_matrix/src/sparse_matrix.cpp", 
+                "D:/Course Programs/NumericalPDE/sparse_matrix/test/test.cpp",
+                "-o",
+                // "${fileDirname}\\${fileBasenameNoExtension}.exe"
+                "D:\\Course Programs\\NumericalPDE\\sparse_matrix\\test\\test_executable.exe"
+            ],
+            "options": {
+                "cwd": "D:\\Course Programs\\NumericalPDE\\sparse_matrix"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "调试器生成的任务。"
+        }
+    ],
+    "version": "2.0.0"
+}
