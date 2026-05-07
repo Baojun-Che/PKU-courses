@@ -1,0 +1,81 @@
+﻿Ticker,YahooTicker,CompanyName,MarketCap,MarketCapRaw,SelectionDate,Universe
+NVDA,NVDA,NVIDIA Corporation,4770000000000.0,4.77T,2026-05-06,S&P500_Top80_by_current_market_cap
+GOOGL,GOOGL,Alphabet Inc.,4710000000000.0,4.71T,2026-05-06,S&P500_Top80_by_current_market_cap
+GOOG,GOOG,Alphabet Inc.,4680000000000.0,4.68T,2026-05-06,S&P500_Top80_by_current_market_cap
+AAPL,AAPL,Apple Inc.,4170000000000.0,4.17T,2026-05-06,S&P500_Top80_by_current_market_cap
+MSFT,MSFT,Microsoft Corporation,3060000000000.0,3.06T,2026-05-06,S&P500_Top80_by_current_market_cap
+AMZN,AMZN,"Amazon.com, Inc.",2940000000000.0,2.94T,2026-05-06,S&P500_Top80_by_current_market_cap
+AVGO,AVGO,Broadcom Inc.,2020000000000.0,2.02T,2026-05-06,S&P500_Top80_by_current_market_cap
+META,META,"Meta Platforms, Inc.",1540000000000.0,1.54T,2026-05-06,S&P500_Top80_by_current_market_cap
+TSLA,TSLA,"Tesla, Inc.",1460000000000.0,1.46T,2026-05-06,S&P500_Top80_by_current_market_cap
+WMT,WMT,Walmart Inc.,1040000000000.0,1.04T,2026-05-06,S&P500_Top80_by_current_market_cap
+BRK.B,BRK-B,Berkshire Hathaway Inc.,1000000000000.0,1.00T,2026-05-06,S&P500_Top80_by_current_market_cap
+LLY,LLY,Eli Lilly and Company,881820000000.0,881.82B,2026-05-06,S&P500_Top80_by_current_market_cap
+JPM,JPM,JPMorgan Chase & Co.,829040000000.0,829.04B,2026-05-06,S&P500_Top80_by_current_market_cap
+MU,MU,"Micron Technology, Inc.",721980000000.0,721.98B,2026-05-06,S&P500_Top80_by_current_market_cap
+XOM,XOM,Exxon Mobil Corporation,641970000000.0,641.97B,2026-05-06,S&P500_Top80_by_current_market_cap
+V,V,Visa Inc.,606740000000.0,606.74B,2026-05-06,S&P500_Top80_by_current_market_cap
+AMD,AMD,"Advanced Micro Devices, Inc.",579190000000.0,579.19B,2026-05-06,S&P500_Top80_by_current_market_cap
+INTC,INTC,Intel Corporation,543559999999.99994,543.56B,2026-05-06,S&P500_Top80_by_current_market_cap
+JNJ,JNJ,Johnson & Johnson,542950000000.00006,542.95B,2026-05-06,S&P500_Top80_by_current_market_cap
+ORCL,ORCL,Oracle Corporation,533080000000.00006,533.08B,2026-05-06,S&P500_Top80_by_current_market_cap
+COST,COST,Costco Wholesale Corporation,450940000000.0,450.94B,2026-05-06,S&P500_Top80_by_current_market_cap
+MA,MA,Mastercard Incorporated,439210000000.0,439.21B,2026-05-06,S&P500_Top80_by_current_market_cap
+CAT,CAT,Caterpillar Inc.,416650000000.0,416.65B,2026-05-06,S&P500_Top80_by_current_market_cap
+CVX,CVX,Chevron Corporation,380850000000.0,380.85B,2026-05-06,S&P500_Top80_by_current_market_cap
+BAC,BAC,Bank of America Corporation,376970000000.0,376.97B,2026-05-06,S&P500_Top80_by_current_market_cap
+CSCO,CSCO,"Cisco Systems, Inc.",372470000000.0,372.47B,2026-05-06,S&P500_Top80_by_current_market_cap
+NFLX,NFLX,"Netflix, Inc.",370090000000.0,370.09B,2026-05-06,S&P500_Top80_by_current_market_cap
+ABBV,ABBV,AbbVie Inc.,364560000000.0,364.56B,2026-05-06,S&P500_Top80_by_current_market_cap
+LRCX,LRCX,Lam Research Corporation,344910000000.0,344.91B,2026-05-06,S&P500_Top80_by_current_market_cap
+KO,KO,The Coca-Cola Company,337660000000.0,337.66B,2026-05-06,S&P500_Top80_by_current_market_cap
+PG,PG,The Procter & Gamble Company,337410000000.0,337.41B,2026-05-06,S&P500_Top80_by_current_market_cap
+UNH,UNH,UnitedHealth Group Incorporated,330470000000.0,330.47B,2026-05-06,S&P500_Top80_by_current_market_cap
+AMAT,AMAT,"Applied Materials, Inc.",326030000000.0,326.03B,2026-05-06,S&P500_Top80_by_current_market_cap
+PLTR,PLTR,Palantir Technologies Inc.,325820000000.0,325.82B,2026-05-06,S&P500_Top80_by_current_market_cap
+HD,HD,"The Home Depot, Inc.",314170000000.0,314.17B,2026-05-06,S&P500_Top80_by_current_market_cap
+GE,GE,GE Aerospace,299100000000.0,299.10B,2026-05-06,S&P500_Top80_by_current_market_cap
+MS,MS,Morgan Stanley,299020000000.0,299.02B,2026-05-06,S&P500_Top80_by_current_market_cap
+GEV,GEV,GE Vernova Inc.,294300000000.0,294.30B,2026-05-06,S&P500_Top80_by_current_market_cap
+GS,GS,"The Goldman Sachs Group, Inc.",281730000000.0,281.73B,2026-05-06,S&P500_Top80_by_current_market_cap
+MRK,MRK,"Merck & Co., Inc.",279460000000.0,279.46B,2026-05-06,S&P500_Top80_by_current_market_cap
+PM,PM,Philip Morris International Inc.,264110000000.0,264.11B,2026-05-06,S&P500_Top80_by_current_market_cap
+TXN,TXN,Texas Instruments Incorporated,255740000000.0,255.74B,2026-05-06,S&P500_Top80_by_current_market_cap
+WFC,WFC,Wells Fargo & Company,244480000000.0,244.48B,2026-05-06,S&P500_Top80_by_current_market_cap
+RTX,RTX,RTX Corporation,232800000000.0,232.80B,2026-05-06,S&P500_Top80_by_current_market_cap
+LIN,LIN,Linde plc,231310000000.0,231.31B,2026-05-06,S&P500_Top80_by_current_market_cap
+KLAC,KLAC,KLA Corporation,226360000000.0,226.36B,2026-05-06,S&P500_Top80_by_current_market_cap
+C,C,Citigroup Inc.,218330000000.0,218.33B,2026-05-06,S&P500_Top80_by_current_market_cap
+AXP,AXP,American Express Company,215580000000.0,215.58B,2026-05-06,S&P500_Top80_by_current_market_cap
+IBM,IBM,International Business Machines Corporation,215260000000.0,215.26B,2026-05-06,S&P500_Top80_by_current_market_cap
+ANET,ANET,"Arista Networks, Inc.",214340000000.0,214.34B,2026-05-06,S&P500_Top80_by_current_market_cap
+PEP,PEP,"PepsiCo, Inc.",211900000000.0,211.90B,2026-05-06,S&P500_Top80_by_current_market_cap
+TMUS,TMUS,"T-Mobile US, Inc.",210280000000.0,210.28B,2026-05-06,S&P500_Top80_by_current_market_cap
+SNDK,SNDK,Sandisk Corporation,208260000000.0,208.26B,2026-05-06,S&P500_Top80_by_current_market_cap
+MCD,MCD,McDonald's Corporation,202710000000.0,202.71B,2026-05-06,S&P500_Top80_by_current_market_cap
+NEE,NEE,"NextEra Energy, Inc.",200780000000.0,200.78B,2026-05-06,S&P500_Top80_by_current_market_cap
+VZ,VZ,Verizon Communications Inc.,197670000000.0,197.67B,2026-05-06,S&P500_Top80_by_current_market_cap
+ADI,ADI,"Analog Devices, Inc.",197610000000.0,197.61B,2026-05-06,S&P500_Top80_by_current_market_cap
+QCOM,QCOM,QUALCOMM Incorporated,196620000000.0,196.62B,2026-05-06,S&P500_Top80_by_current_market_cap
+T,T,AT&T Inc.,179960000000.0,179.96B,2026-05-06,S&P500_Top80_by_current_market_cap
+DIS,DIS,The Walt Disney Company,178000000000.0,178.00B,2026-05-06,S&P500_Top80_by_current_market_cap
+AMGN,AMGN,Amgen Inc.,177880000000.0,177.88B,2026-05-06,S&P500_Top80_by_current_market_cap
+BA,BA,The Boeing Company,176880000000.0,176.88B,2026-05-06,S&P500_Top80_by_current_market_cap
+TMO,TMO,Thermo Fisher Scientific Inc.,173460000000.0,173.46B,2026-05-06,S&P500_Top80_by_current_market_cap
+STX,STX,Seagate Technology Holdings plc,172880000000.0,172.88B,2026-05-06,S&P500_Top80_by_current_market_cap
+TJX,TJX,"The TJX Companies, Inc.",171360000000.0,171.36B,2026-05-06,S&P500_Top80_by_current_market_cap
+BLK,BLK,"BlackRock, Inc.",170950000000.0,170.95B,2026-05-06,S&P500_Top80_by_current_market_cap
+APH,APH,Amphenol Corporation,168160000000.0,168.16B,2026-05-06,S&P500_Top80_by_current_market_cap
+GILD,GILD,"Gilead Sciences, Inc.",165680000000.0,165.68B,2026-05-06,S&P500_Top80_by_current_market_cap
+APP,APP,AppLovin Corporation,160770000000.0,160.77B,2026-05-06,S&P500_Top80_by_current_market_cap
+SCHW,SCHW,The Charles Schwab Corporation,160600000000.0,160.60B,2026-05-06,S&P500_Top80_by_current_market_cap
+WDC,WDC,Western Digital Corporation,160370000000.0,160.37B,2026-05-06,S&P500_Top80_by_current_market_cap
+ISRG,ISRG,"Intuitive Surgical, Inc.",159860000000.0,159.86B,2026-05-06,S&P500_Top80_by_current_market_cap
+ETN,ETN,Eaton Corporation plc,159410000000.0,159.41B,2026-05-06,S&P500_Top80_by_current_market_cap
+UNP,UNP,Union Pacific Corporation,156750000000.0,156.75B,2026-05-06,S&P500_Top80_by_current_market_cap
+DE,DE,Deere & Company,155530000000.0,155.53B,2026-05-06,S&P500_Top80_by_current_market_cap
+CRM,CRM,"Salesforce, Inc.",152970000000.0,152.97B,2026-05-06,S&P500_Top80_by_current_market_cap
+ABT,ABT,Abbott Laboratories,151830000000.0,151.83B,2026-05-06,S&P500_Top80_by_current_market_cap
+WELL,WELL,Welltower Inc.,151280000000.0,151.28B,2026-05-06,S&P500_Top80_by_current_market_cap
+BX,BX,Blackstone Inc.,150970000000.0,150.97B,2026-05-06,S&P500_Top80_by_current_market_cap
+PFE,PFE,Pfizer Inc.,150750000000.0,150.75B,2026-05-06,S&P500_Top80_by_current_market_cap
