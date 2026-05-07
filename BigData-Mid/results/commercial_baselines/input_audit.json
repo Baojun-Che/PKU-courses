@@ -1,10 +1,10 @@
 {
-  "n_assets": 80,
-  "mu_min": -0.00291096644862395,
-  "mu_max": 0.003785208138469876,
-  "mu_mean": 0.0005640803535047482,
-  "raw_cov_min_eigenvalue": 0.00014939702188748635,
-  "raw_cov_max_eigenvalue": 0.001582258464423642,
+  "n_assets": 76,
+  "mu_min": -0.002847281868755985,
+  "mu_max": 0.0036007455443484724,
+  "mu_mean": 0.00015823111214677578,
+  "raw_cov_min_eigenvalue": 0.00010180295263590034,
+  "raw_cov_max_eigenvalue": 0.00853132942029695,
   "covariance_eps_argument": 1e-08,
   "solver": "MOSEK",
   "periods_per_year": 252.0

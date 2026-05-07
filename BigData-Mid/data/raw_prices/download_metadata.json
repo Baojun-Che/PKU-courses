@@ -1,0 +1,14 @@
+{
+  "created_at_utc": "2026-05-07T06:20:01.069620+00:00",
+  "start_date": "2015-01-01",
+  "end_date": "2024-12-31",
+  "universe_path": "data/sp500_top80_universe.csv",
+  "output_dir": "data\\raw_prices",
+  "requested_asset_count": 80,
+  "successful_asset_count": 79,
+  "failed_asset_count": 1,
+  "source": "Yahoo Finance chart endpoint requested directly with requests; yfinance is not used.",
+  "adjusted_price_field": "AdjClose",
+  "combined_output_path": "data\\raw_prices\\all_daily_prices.csv",
+  "download_log_path": "data\\raw_prices\\download_log.csv"
+}

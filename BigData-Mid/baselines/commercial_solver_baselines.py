@@ -632,8 +632,8 @@ def run(args: argparse.Namespace) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run QP and SOCP commercial-solver baselines for portfolio optimization.")
-    parser.add_argument("--input", default="../data/estimates_train.npz", help="Path to estimates .npz or directory containing mu.csv and Sigma.csv.")
-    parser.add_argument("--outdir", default="../results/commercial_baselines/", help="Output directory for tables and figures.")
+    parser.add_argument("--input", default="data/estimates_train.npz", help="Path to estimates .npz or directory containing mu.csv and Sigma.csv.")
+    parser.add_argument("--outdir", default="results/commercial_baselines/", help="Output directory for tables and figures.")
     parser.add_argument("--solver", default="MOSEK", choices=["MOSEK", "GUROBI", "mosek", "gurobi"], help="Commercial solver to call through CVXPY.")
     parser.add_argument("--eps", type=float, default=1e-8, help="PSD stabilization shift for covariance matrix.")
     parser.add_argument("--periods-per-year", type=float, default=252.0, help="Use 252 for daily estimates; set to 1 if mu/Sigma are already annualized.")

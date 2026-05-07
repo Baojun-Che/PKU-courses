@@ -47,6 +47,7 @@ plt.xlabel("Iteration")
 plt.ylabel("Objective Value")
 plt.title("ADMM Convergence Curve")
 plt.legend()
+plt.tight_layout()
 plt.savefig(os.path.join(save_path, "admm_obj_history.png"))
 
 # PDHG 可行性收敛曲线
@@ -57,4 +58,5 @@ plt.xlabel("Iteration")
 plt.ylabel("Feasibility Residuals")
 plt.title("PDHG Feasibility Convergence Curve")
 plt.legend()
+plt.tight_layout()
 plt.savefig(os.path.join(save_path, "pdhg_feas_history.png"))
