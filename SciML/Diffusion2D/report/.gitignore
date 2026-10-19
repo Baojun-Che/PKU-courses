@@ -1,0 +1,10 @@
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.xdv
+preview-*.png
+build-pass*.txt
+report-text.txt

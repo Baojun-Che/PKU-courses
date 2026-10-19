@@ -1,0 +1,61 @@
+{
+  "nx": 200,
+  "ny": 200,
+  "dx": 0.005,
+  "dy": 0.005,
+  "diffusion": 0.01,
+  "velocity": [
+    1,
+    0
+  ],
+  "t_final": 1.5,
+  "snapshot_interval": 0.01,
+  "dt_limit": 0.00045454545454545455,
+  "actual_max_dt": 0.00035714285714285747,
+  "snapshot_count": 151,
+  "report_times": [
+    0.2,
+    0.5,
+    1.0,
+    1.5
+  ],
+  "training": "full trajectory reconstruction; not an extrapolation test",
+  "models": [
+    {
+      "method": "POD",
+      "requested_rank": 5,
+      "effective_rank": 5,
+      "final_relative_l2": 0.032522386881463916
+    },
+    {
+      "method": "DMD",
+      "requested_rank": 5,
+      "effective_rank": 5,
+      "final_relative_l2": 0.022359008434191998
+    },
+    {
+      "method": "POD",
+      "requested_rank": 10,
+      "effective_rank": 10,
+      "final_relative_l2": 0.0023726770859701894
+    },
+    {
+      "method": "DMD",
+      "requested_rank": 10,
+      "effective_rank": 10,
+      "final_relative_l2": 0.0020871628323351527
+    },
+    {
+      "method": "POD",
+      "requested_rank": 20,
+      "effective_rank": 20,
+      "final_relative_l2": 7.535403800826816e-06
+    },
+    {
+      "method": "DMD",
+      "requested_rank": 20,
+      "effective_rank": 20,
+      "final_relative_l2": 7.389371518618018e-06
+    }
+  ]
+}

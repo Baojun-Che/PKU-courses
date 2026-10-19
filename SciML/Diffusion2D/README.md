@@ -31,9 +31,9 @@ python run_demo.py --formal --dt 0.01
 
 求解
 
-\[
+$$
 \partial_t c+\partial_x c=D(\partial_{xx}c+\partial_{yy}c),\qquad D=0.01
-\]
+$$
 
 区域为单位正方形，初值为零，速度固定为 `(1,0)`。单元中心为 `x_i=(i+1/2)dx`、`y_j=(j+1/2)dy`；左侧边界值 `g_j` 在严格满足 `1/3<y_j<2/3` 时为 1，其余为 0。上下周期连接；右侧零扩散通量，对流正常流出。
 
@@ -41,29 +41,29 @@ python run_demo.py --formal --dt 0.01
 
 有限体积法以单元平均浓度为未知量；沿正 x、正 y 方向定义总通量。内部 x 面采用正速度迎风对流和中心扩散：
 
-\[
+$$
 F^x_{i+1/2,j}=c_{i,j}-D\frac{c_{i+1,j}-c_{i,j}}{dx}.
-\]
+$$
 
 y 面仅含扩散通量：
 
-\[
+$$
 F^y_{i,j+1/2}=-D\frac{c_{i,j+1}-c_{i,j}}{dy},
-\]
+$$
 
 其中 y 索引循环。左、右外边界通量为
 
-\[
+$$
 F^x_{-1/2,j}=g_j-2D\frac{c_{0,j}-g_j}{dx},\qquad
 F^x_{nx-1/2,j}=c_{nx-1,j}.
-\]
+$$
 
 左侧浓度条件位于边界面，距第一个单元中心为 `dx/2`，因此扩散项带因子 2。用各面通量差除以网格宽度得到
 
-\[
+$$
 \dot c_{i,j}=-\frac{F^x_{i+1/2,j}-F^x_{i-1/2,j}}{dx}
              -\frac{F^y_{i,j+1/2}-F^y_{i,j-1/2}}{dy}.
-\]
+$$
 
 将其组装为稀疏系统 `dc/dt=A@c+f`。按 `(ny,nx)` 数组布局，边界项只有左侧单元非零：`f_grid[j,0]=(1/dx+2D/dx²)g_j`，然后将 `f_grid` 展开为向量 `f`；周期连接属于 `A`。时间推进使用显式 Euler：`c_next=c+dt*(A@c+f)`，没有构造全阶稠密矩阵。
 
@@ -71,10 +71,10 @@ F^x_{nx-1/2,j}=c_{nx-1,j}.
 
 要求 Euler 更新中的系数非负，步长上界由最负的对角元给出：
 
-\[
+$$
 dt_{limit}=\frac{1}{\max_i(-A_{ii})}
            =\frac{1}{1/dx+3D/dx^2+2D/dy^2}.
-\]
+$$
 
 这一上界包含左侧边界单元的额外扩散系数。默认最大步长为 `0.8*dt_limit`，再将每个快照间隔等分，使实际步长不超过该上界。
 
@@ -88,16 +88,16 @@ dt_{limit}=\frac{1}{\max_i(-A_{ii})}
 
 以全阶快照构成 `C=[c(t0),...,c(tN)]`，计算薄 SVD：
 
-\[
+$$
 C=U\Sigma W^T,\quad V=U[:, :r],\quad c\approx Va.
-\]
+$$
 
 本版本不减去时间均值，因此无需增加均值修正项。利用 `V.T@V=I` 投影原系统：
 
-\[
+$$
 \dot a=A_r a+f_r,\quad A_r=V^TAV,\quad f_r=V^Tf,
 \qquad a(0)=V^Tc(0).
-\]
+$$
 
 对系数使用显式 Euler，再以 `V@a` 重构全场。默认复用全阶实际步长，比较不同基底数带来的误差；不能因为矩阵变小就假设更大的显式步长稳定。零初值对应零降阶系数。
 
@@ -107,16 +107,16 @@ C=U\Sigma W^T,\quad V=U[:, :r],\quad c\approx Va.
 
 离散全阶系统含边界强迫，单纯拟合 `c_next=Kc` 无法从零初值产生非零浓度，因此需要增广状态 `[c;1]`。本版本先利用快照 SVD 将浓度降到 `z=V.T@c`，并始终保留常数坐标：
 
-\[
+$$
 Z_-=[z_0,\ldots,z_{N-1}],\quad Z_+=[z_1,\ldots,z_N],
 \qquad X_{aug}=\begin{bmatrix}Z_-\\\mathbf1^T\end{bmatrix}.
-\]
+$$
 
 用 SVD 最小二乘求解 `[B,b] X_aug≈Z_+`，再构造
 
-\[
+$$
 K_{aug}=\begin{bmatrix}B&b\\0&1\end{bmatrix}.
-\]
+$$
 
 最后一行固定，确保常数坐标在多步预测中仍为 1。这里实现的是**受约束的投影增广 DMD**，不是对整个 `[c;1]` 同时做秩截断的无约束 exact DMD。
 
