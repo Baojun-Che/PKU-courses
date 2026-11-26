@@ -1,0 +1,16 @@
+__pycache__/
+.pytest_cache/
+outputs*/
+.work/
+.data/
+.result/
+result/
+data/
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.xdv
+*.synctex.gz

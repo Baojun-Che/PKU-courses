@@ -1,14 +1,15 @@
 import numpy as np
-import random
-from kernel import rbf_kernel, matern_kernel
+if __package__:
+    from .kernel import rbf_kernel, matern_kernel
+else:
+    from kernel import rbf_kernel, matern_kernel
 from pathlib import Path
-
-random.seed(20030107)
 
 def generate_data(n_samples: int = 20,
         sample_range: tuple = (-8, 8),
         gp_para: np.ndarray = np.array([1.0, 1.0, 0.1]),
-        kernel_type: str = 'rbf'
+        kernel_type: str = 'rbf',
+        random_state: int = 20030107,
         ) -> tuple:
     """
     Generate synthetic data using Gaussian Process regression.
@@ -17,15 +18,16 @@ def generate_data(n_samples: int = 20,
     - n_samples: Number of samples to generate.
     - gp_para: Parameters for the Gaussian Process (length_scale, sigma_f, sigma).
     - kernel_type: Type of kernel to use ('rbf' or 'matern').
-    - noise: Standard deviation of the noise to add to the outputs.
+    - random_state: Seed for a local NumPy generator; None gives fresh samples.
 
     Returns:
     - X: Input features (n_samples x 1).
-    - y: Output targets (n_samples x 1).
+    - y: Output targets (n_samples,).
     """
     
     # Generate random input features
-    X = np.random.uniform(sample_range[0], sample_range[1], size=(n_samples, 1))
+    rng = np.random.default_rng(random_state)
+    X = rng.uniform(sample_range[0], sample_range[1], size=(n_samples, 1))
     
     # Compute the covariance matrix using the specified kernel
     if kernel_type == 'rbf':
@@ -36,11 +38,11 @@ def generate_data(n_samples: int = 20,
         raise ValueError("Invalid kernel type. Choose 'rbf' or 'matern'.")
     
     # Sample from the multivariate normal distribution
-    y = np.random.multivariate_normal(mean=np.zeros(n_samples), cov=cov_matrix)
+    y = rng.multivariate_normal(mean=np.zeros(n_samples), cov=cov_matrix)
 
     data_dir = Path(__file__).resolve().parent.parent / "data"
     data_dir.mkdir(parents=True, exist_ok=True)
 
     np.savez(data_dir / "x.npz", X=X)
     np.savez(data_dir / "fx.npz", y=y)
-    return
+    return X, y

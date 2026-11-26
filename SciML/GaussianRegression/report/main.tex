@@ -1,0 +1,227 @@
+% !TeX program = xelatex
+\documentclass[UTF8,a4paper,11pt,fontset=fandol]{ctexart}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{amsmath,amssymb,bm,booktabs}
+\usepackage{graphicx,float,caption}
+\usepackage{xcolor,hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black,
+  pdftitle={科学机器学习作业二：高斯过程回归与超参数选择}}
+\graphicspath{{../result/}}
+\captionsetup{font=small,labelfont=bf,skip=4pt}
+\setlength{\parskip}{0.2em}
+\setlength{\emergencystretch}{2em}
+\newcommand{\tht}{\bm{\theta}}
+\newcommand{\score}{\widetilde{\mathcal L}}
+\title{科学机器学习作业二}
+\author{姓名：车保骏\qquad 学号：2501110040}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{数据生成与计算方法}
+\subsection{高斯过程与采样}
+考虑零均值高斯过程 $f(x)\sim\operatorname{GP}(0,\kappa(x,x'))$，
+采用题目给出的 RBF 核
+\begin{equation}\label{eq:rbf}
+ \kappa_{\rm RBF}(x,x';\tht)
+ =\sigma_f^2\exp\!\left[-\frac{(x-x')^2}{2l^2}\right]
+ +\sigma^2\delta_{x,x'},\qquad \tht=(l,\sigma_f,\sigma).
+\end{equation}
+其中 $l$ 控制相关长度，$\sigma_f$ 控制信号幅度，$\sigma$ 控制白噪声幅度。
+在 $(-8,8)$ 上独立均匀采样 $20$ 个输入 $X=(x_1,\ldots,x_{20})^{\mathsf T}$，
+令 $K_{ij}=\kappa(x_i,x_j)$，再由
+\begin{equation}
+ \bm y\sim\mathcal N(\bm 0,K),\qquad \tht_0=(1.0,1.0,0.1)
+\end{equation}
+生成观测值。使用 NumPy 的局部随机数生成器，种子为 $20030107$。
+输入与观测分别保存在 \texttt{data/x.npz} 和 \texttt{data/fx.npz}；
+下文所有回归和参数估计均使用这同一组数据。
+
+\subsection{条件分布与不确定性}
+将 $[-8,8]$ 上的 $100$ 个等距点组成预测网格 $X_*$，定义
+$K_*=\kappa(X,X_*)$ 和 $K_{**}=\kappa(X_*,X_*)$。
+高斯条件分布给出
+\begin{equation}\label{eq:posterior}
+ \bm\mu_*=K_*^{\mathsf T}K_\varepsilon^{-1}\bm y,\qquad
+ \Sigma_*=K_{**}-K_*^{\mathsf T}K_\varepsilon^{-1}K_*,\qquad
+ K_\varepsilon=K+10^{-10}I.
+\end{equation}
+计算中对 $K_\varepsilon$ 作 Cholesky 分解，用三角方程求解代替显式求逆。
+图中的阴影为逐点区间 $\mu_*(x)\pm2\sqrt{\Sigma_*(x,x)}$，
+约对应每个位置的 $95.45\%$ 高斯概率区间。
+预测协方差使用式\eqref{eq:rbf}的完整核，包含白噪声项；
+在不与训练输入重合的新位置，预测方差也包含 $\sigma^2$。
+
+\subsection{无先验下的超参数目标}
+取参数后验分布为无信息即 $p(\tht)=1$，则
+\begin{equation}\label{eq:likelihood}
+ \log p(\tht\mid\bm y,X)
+ =-\frac12\bm y^{\mathsf T}K_\varepsilon^{-1}\bm y
+  -\frac12\log|K_\varepsilon|-\frac n2\log(2\pi)+C.
+\end{equation}
+省略与 $\tht$ 无关的项后，记优化目标为
+\begin{equation}\label{eq:score}
+ \score(\tht)
+ =-\frac12\bm y^{\mathsf T}\bm\alpha-\sum_{i=1}^n\log L_{ii},
+ \qquad K_\varepsilon=LL^{\mathsf T},\quad
+ \bm\alpha=K_\varepsilon^{-1}\bm y.
+\end{equation}
+后文的数值表和等高线均报告 $\score$。参数估计通过最小化 $-\score$
+实现，对数行列式由 Cholesky 因子计算。
+
+\clearpage
+\section{三组指定超参数的 RBF 回归}
+三组参数的结果如图\ref{fig:fixed1}--\ref{fig:fixed3}所示。
+红点为同一组训练数据，蓝线和阴影分别表示条件均值与两倍标准差区间。
+\begin{figure}[H]
+ \centering\includegraphics[width=0.84\linewidth]{Q1-p1.png}
+ \caption{RBF 回归，$\tht=(1.0,1.0,0.1)$。红点为观测，蓝线为条件均值，阴影为两倍标准差区间。}\label{fig:fixed1}
+\end{figure}
+\begin{figure}[H]
+ \centering\includegraphics[width=0.84\linewidth]{Q1-p2.png}
+ \caption{RBF 回归，$\tht=(0.3,1.08,5\times10^{-5})$。}\label{fig:fixed2}
+\end{figure}
+\clearpage
+\subsection*{参数影响与对数概率比较}
+\begin{figure}[H]
+ \centering\includegraphics[width=0.84\linewidth]{Q1-p3.png}
+ \caption{RBF 回归，$\tht=(3.0,1.16,0.89)$。}\label{fig:fixed3}
+\end{figure}
+\begin{table}[H]
+ \centering\small
+ \caption{指定参数与对数概率目标值。}\label{tab:fixed}
+ \begin{tabular}{ccccc}
+ \toprule 组别 & $l$ & $\sigma_f$ & $\sigma$ & $\score$ \\
+ \midrule
+ 1 & 1.0 & 1.0 & 0.1 & 6.600970 \\
+ 2 & 0.3 & 1.08 & $5\times10^{-5}$ & $-60.564638$ \\
+ 3 & 3.0 & 1.16 & 0.89 & $-8.496569$ \\
+ \bottomrule
+ \end{tabular}
+\end{table}
+第一组在有数据的位置收缩不确定性，在采样稀疏的区域增大不确定性。
+第二组的相关长度较短、噪声幅度接近零，均值在部分密集采样点附近出现明显起伏，
+远离数据处则较快回到零均值。第三组的长相关尺度与较大噪声给出更平缓的均值和更宽的区间。
+
+表\ref{tab:fixed}中，生成参数对应的目标值最高。
+第二组虽然在训练点附近形成更强的插值效果，但其对数概率最低。
+式\eqref{eq:score}同时包含数据二次型和对数行列式，因此超参数选择还取决于整组数据的协方差结构，
+并非只比较均值曲线是否接近观测点。
+
+\clearpage
+\section{RBF 核的超参数选择}
+对 $\bm z=\log\tht$ 使用 L-BFGS-B方法进行优化（调用Python的Scipy包），以保证超参数为正。
+原始坐标中的搜索范围为
+\begin{equation}\label{eq:bounds}
+ l\in[10^{-2},10^2],\qquad
+ \sigma_f\in[10^{-3},10^2],\qquad
+ \sigma\in[10^{-6},10].
+\end{equation}
+我们从不同的初始点出发运行优化算法，第一次从 $(1,1,0.1)$ 出发，其余 $9$ 个初值在上述范围的对数坐标内均匀抽样。在 $10$ 次运行中按最终 $\score$ 选取最大者。
+
+
+得到的最优参数和目标值为
+\begin{equation}\label{eq:rbf-opt}
+ \widehat\tht_{\rm RBF}=(1.049124,\ 1.040154,\ 0.129999),\qquad
+ \score(\widehat\tht_{\rm RBF})=7.213634.
+\end{equation}
+这一目标值比生成参数对应的 $6.600970$ 高约 $0.612664$。
+估计的相关长度和信号幅度接近生成值，噪声幅度由 $0.1$ 增至约 $0.13$。
+图\ref{fig:rbf-fit}中的均值保持了数据的主要变化，稀疏区域的不确定性较大。
+
+\begin{figure}[H]
+ \centering\includegraphics[width=0.76\linewidth]{Q2.png}
+ \caption{采用优化后 RBF 参数的条件均值与两倍标准差区间。}\label{fig:rbf-fit}
+\end{figure}
+\begin{figure}[H]
+ \centering\includegraphics[width=\linewidth]{rbf_log_likelihood_contours.png}
+ \caption{RBF 对数概率切片。各子图分别固定一个参数在式\eqref{eq:rbf-opt}的估计值，
+ 展示其余两个参数；红星为本次选取的最优点。横纵轴均为对数坐标，
+ 色阶展示各切片峰值以下 $30$ 个对数单位，低于该范围的区域使用底色。}\label{fig:rbf-contour}
+\end{figure}
+图\ref{fig:rbf-contour}绘制了固定一个变量时对数概率的等高线图，红星为本次选取的最优点。低噪声方向以及小信号幅度方向还存在其他高于周围的区域，
+不同初值的最终目标值也有明显差异，具体数值见表\ref{tab:runs}。
+
+\clearpage
+\section{Mat\'ern 核的超参数选择}
+将核替换为题目给出的 Mat\'ern $\nu=3/2$ 核：
+\begin{equation}\label{eq:matern}
+ \kappa_{\rm M}(x,x';\tht)
+ =\sigma_f^2\left(1+\frac{\sqrt3|x-x'|}{l}\right)
+  \exp\!\left(-\frac{\sqrt3|x-x'|}{l}\right)+\sigma^2\delta_{x,x'}.
+\end{equation}
+该核的相关结构在原点附近不如 RBF 光滑。
+使用相同数据、参数范围和 $10$ 个初值，仍以式\eqref{eq:score}为优化目标，得到
+\begin{equation}\label{eq:matern-opt}
+ \widehat\tht_{\rm M}=(1.062950,\ 0.880629,\ 0.139762),\qquad
+ \score(\widehat\tht_{\rm M})=5.434290.
+\end{equation}
+其相关长度约为 $1.06$，信号幅度低于 RBF 的估计值，噪声幅度约为 $0.14$。
+图\ref{fig:matern-fit}中，均值在观测密集处跟随数据，
+在 $x\approx-6$ 与 $x\approx4$ 等采样稀疏区域，不确定性明显增大。
+
+\begin{figure}[H]
+ \centering\includegraphics[width=0.76\linewidth]{Q3.png}
+ \caption{采用优化后 Mat\'ern 参数的条件均值与两倍标准差区间。}\label{fig:matern-fit}
+\end{figure}
+\begin{figure}[H]
+ \centering\includegraphics[width=\linewidth]{matern_log_likelihood_contours.png}
+ \caption{Mat\'ern 对数概率切片。固定参数采用式\eqref{eq:matern-opt}的估计值，
+ 坐标、色阶和红星的含义与图\ref{fig:rbf-contour}一致。}\label{fig:matern-contour}
+\end{figure}
+图\ref{fig:rbf-contour}绘制了固定一个变量时对数概率的等高线图，红星为本次选取的最优点。各切片的红星位于峰值附近。
+
+\clearpage
+\section{优化诊断与实现记录}
+表\ref{tab:runs}列出相同 $10$ 个初值的最终目标值。
+以目标值距本次最大值小于 $10^{-5}$ 为标准，RBF 有 $3$ 次、Mat\'ern 有 $4$ 次
+到达同一最优目标值附近。另一些运行停留在接近零信号或低噪声的区域。
+RBF 的第 $4$ 次运行虽然返回成功终止标志，但目标值仍很低，且参数几乎未离开初值，
+说明比较最终函数值比仅检查优化器的成功标志更能反映求解结果。
+
+\begin{table}[H]
+ \centering\small
+ \caption{多次初始化的最终 $\score$；第 $1$ 次为指定初值，后 $9$ 次为对数均匀随机初值。}\label{tab:runs}
+ \begin{tabular}{crr}
+ \toprule 运行编号 & RBF & Mat\'ern \\
+ \midrule
+ 1 & 7.213634 & 5.434290 \\
+ 2 & $-5.315366$ & $-5.317939$ \\
+ 3 & $-5.327897$ & $-5.327901$ \\
+ 4 & $-6.566599\times10^9$ & 1.390300 \\
+ 5 & 7.213634 & 5.434290 \\
+ 6 & $-5.327913$ & 5.434290 \\
+ 7 & 1.055644 & 1.390300 \\
+ 8 & $-5.315366$ & $-5.317939$ \\
+ 9 & $-5.327911$ & $-5.327911$ \\
+ 10 & 7.213634 & 5.434290 \\
+ \bottomrule
+ \end{tabular}
+\end{table}
+多初值比较与二维切片共同支持所选点优于本次搜索中的其他解；
+二维切片固定了一个坐标，因此该检查不构成三维全局最优性的证明。
+
+实现使用 Python、NumPy、SciPy 和 Matplotlib。
+L-BFGS-B 的梯度采用数值差分，设置
+\texttt{maxiter=1000}、\texttt{ftol=1e-9}、\texttt{gtol=1e-6}、\texttt{maxls=50}。
+数据生成、核函数、参数优化和回归分别位于
+\texttt{src/generate\_data.py}、\texttt{src/kernel.py}、
+\texttt{src/gp\_para\_opt.py} 和 \texttt{src/gp\_regression.py}。
+图像保存在 \texttt{result/}，本报告的参数、目标值及逐次优化结果
+保存在 \texttt{report/results.json}；其中记录的优化随机种子为 $42$。
+
+\section*{AI 使用声明}
+本作业使用了 ChatGPT Codex 辅助编程和报告写作。
+高斯过程的核函数、单次超参数优化函数和回归函数由本人编写；
+ChatGPT Codex 协助编写回归与等高线绘图、多次初始化优化并选取最好结果的代码，
+并协助调试，包括参数传递、数组维度、核矩阵计算和数值稳定性等问题。
+编程过程中也使用 AI 查询 Python 库的接口、参数含义和调用方法。
+本报告的结构组织、文字撰写及 LaTeX 排版由 ChatGPT Codex 协助完成。本项目与 ChatGPT Codex 的交互记录以及代码仓库见下：
+
+
+\href{https://chatgpt.com/s/cx_6b007d9cdfa081919bf306ca07950faa}{与 ChatGPT Codex 的聊天记录} 
+
+\href{https://github.com/Baojun-Che/PKU-courses/tree/main/SciML/GaussianRegression}{代码仓库}
+
+\end{document}
